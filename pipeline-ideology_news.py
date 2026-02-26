@@ -1,8 +1,10 @@
+from tqdm import tqdm
+
 from toolbox import (
     DataHandler, 
     CustomTransformersPipeline, 
-    TestAllEpochs, 
-    ExportEmbeddingsForAllEpochs,
+    TestOneEpoch, 
+    ExportEmbeddingsForOneEpoch,
     CustomLogger,
     clean
 )
@@ -11,9 +13,11 @@ set_float32_matmul_precision('high')
 
 TEST_MODE = True
 TOKENIZER_MAX_LENGTH = 1e5 # Absurdly high so that the number of max_tokenizer is set to the model's limit
-MACHINE_BATCH_SIZE = 8
+MACHINE_BATCH_SIZE = 2
+N_EPOCH = 4
 
-model = "answerdotai/ModernBERT-base"
+# model = "answerdotai/ModernBERT-base"
+model = "google-bert/bert-base-uncased"
 learning_rate = 5e-4
 
 logger = CustomLogger("./custom_logs")
@@ -33,7 +37,7 @@ try :
     pipe = CustomTransformersPipeline(
         data             = DH, 
         model_name       = model,
-        num_train_epochs = 4,
+        num_train_epochs = N_EPOCH,
         
         total_batch_size = 64,
         learning_rate    = learning_rate,
@@ -55,31 +59,52 @@ try :
     DH, pipe = (None, None)
 
     # Step 2 - Testing
-    (       
-        TestAllEpochs(
-            output_dir, 
-            logger = logger, 
-            batch_size = MACHINE_BATCH_SIZE
+    score_f1 = {}
+    for epoch in tqdm(range(1, N_EPOCH + 1) , desc="Testing"):
+        score, _ = (
+            TestOneEpoch(
+                foldername_model = output_dir, 
+                epoch = epoch, 
+                logger = logger, 
+                batch_size = MACHINE_BATCH_SIZE * 2
+            )
+            .routine()
         )
-        .routine(
-            foldername_data = "./data/DataHandlerForInference",
-            filename_scores = "./results/ideology_news/scores.csv",
-            foldername_predictions = "./results/ideology_news/prediction"
+        score_f1[epoch] = score["score"]
+    
+    best_epoch = (
+        sorted(
+            score_f1.items(),
+            key = lambda item : item[1], # use the score
+            reverse = True
         )
+        [0] # First item
+        [0] # epoch number
     )
+    logger(f"After testing, best epoch : {best_epoch}")
 
     # Step 3 - Saving embeddings
     (
-        ExportEmbeddingsForAllEpochs(
-            output_dir,
-            logger = logger, 
-            batch_size=MACHINE_BATCH_SIZE
+        ExportEmbeddingsForOneEpoch(
+            foldername_model=output_dir,
+            epoch = best_epoch,
+            logger = logger,
+            # foldername_data=
+            batch_size = MACHINE_BATCH_SIZE * 2
         )
-        .routine(
-            foldername_data = "./data/DataHandlerForInference",
-            delete_files_after_routine=True
-        )
+        .routine(delete_files_after_routine=True)
     )
+    # (
+    #     ExportEmbeddingsForAllEpochs(
+    #         output_dir,
+    #         logger = logger, 
+    #         batch_size=MACHINE_BATCH_SIZE * 2
+    #     )
+    #     .routine(
+    #         foldername_data = "./data/DataHandlerForInference",
+    #         delete_files_after_routine=True
+    #     )
+    # )
     logger.notify_when_done("Routine S12-ideology_news")
 except Exception as e:
     print("#" * 100)

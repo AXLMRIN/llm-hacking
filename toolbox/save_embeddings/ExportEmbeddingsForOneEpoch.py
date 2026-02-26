@@ -41,9 +41,9 @@ class ExportEmbeddingsForOneEpoch:
     """
     def __init__(self, 
         foldername_model: str, 
-        foldername_data: str, 
         epoch : int, 
         logger : CustomLogger,
+        foldername_data: str|None = None, 
         device : str|None = None,
         batch_size : int = 64
         ) -> None:
@@ -51,11 +51,13 @@ class ExportEmbeddingsForOneEpoch:
 
         Parameters:
         -----------
-            - foldername (str): full path to the checkpoints (saved during training)
-                Equivalent to output_dir from CustomTransformersPipeline.
+            - foldername_model (str): full path to the checkpoints (saved during 
+                training) Equivalent to output_dir from CustomTransformersPipeline.
             - epoch (int): number of epochs of training, will choose what checkpoint
                 to load. Epoch 0 = no training.
             - logger (CustomLogger): will give information as the data is processed.
+            - foldername_data (str|None): full path to a dataset. Must be loadable with 
+                datasets.load_from_disk. If None, will use the foldername model
             - device (str or None, default = None): device to load the model on.
                 can be 'cpu', 'cuda' or 'cuda:X'.
             - batch_size (int, default = 64): the batch size used during the testing.
@@ -91,7 +93,10 @@ class ExportEmbeddingsForOneEpoch:
         self.__epoch : str = epoch
         self.__logger : CustomLogger = logger
         self.__batch_size : int = batch_size
-        self.__ds : DatasetDict = load_from_disk(foldername_data)
+        if foldername_data: 
+            self.__ds : DatasetDict = load_from_disk(foldername_data)
+        else: 
+            self.__ds : DatasetDict = load_from_disk(Path(foldername_model).joinpath("data"))
 
         if device is None : 
             self.device = "cuda" if cuda_available() else "cpu"
