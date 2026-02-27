@@ -88,14 +88,15 @@ try :
     for epoch in tqdm(range(1, N_EPOCH + 1) , desc="Exporting"):
         export_routine = ExportEmbeddingsForOneEpoch(
                 foldername_model=output_dir,
-                epoch = best_epoch,
-                logger = logger,
                 # foldername_data=
+                epoch = epoch,
+                logger = logger,
                 batch_size = MACHINE_BATCH_SIZE * 2
             )
         if epoch == best_epoch:
-            export_routine.routine()
-        export_routine.delete_files()
+            export_routine.routine(delete_files_after_routine = True)
+        else: 
+            export_routine.delete_files()
         del export_routine
         clean()
 
