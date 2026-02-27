@@ -146,7 +146,7 @@ class ExportEmbeddingsForOneEpoch:
                 
                 # Has to do it twice because the output of the base model depends 
                 # on the pretrained model
-                logits : np.ndarray = self.__model(**model_input).\
+                logits : np.ndarray = self.__model(**model_input).logits\
                     detach().cpu().numpy()
                 
                 batch_df_labels = pd.DataFrame({
