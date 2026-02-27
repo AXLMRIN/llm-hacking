@@ -12,6 +12,7 @@ from torch import set_float32_matmul_precision
 set_float32_matmul_precision('high')
 
 TEST_MODE = True
+LABEL_DICHOTOMIZE = "bias_right"
 TOKENIZER_MAX_LENGTH = 1e5 # Absurdly high so that the number of max_tokenizer is set to the model's limit
 MACHINE_BATCH_SIZE = 2
 N_EPOCH = 4
@@ -28,7 +29,7 @@ try :
     DH = DataHandler(
         filename = "./data/ideology_news-stratified_year_balanced.csv",   # UPDATE
         text_column = "content", 
-        label_column = "bias_text",
+        label_column = LABEL_DICHOTOMIZE,
         id_column = "ID",
         logger = logger, 
     )
