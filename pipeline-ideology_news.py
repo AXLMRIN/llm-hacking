@@ -88,7 +88,7 @@ try :
     for epoch in tqdm(range(1, N_EPOCH + 1) , desc="Exporting"):
         export_routine = ExportEmbeddingsForOneEpoch(
                 foldername_model=output_dir,
-                # foldername_data=
+                foldername_data=f"./data/dataset-dict-for-{LABEL_DICHOTOMIZE}",
                 epoch = epoch,
                 logger = logger,
                 batch_size = MACHINE_BATCH_SIZE * 2
