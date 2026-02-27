@@ -85,6 +85,8 @@ class ExportEmbeddingsForOneEpoch:
             - self.device (str or None, default = None): device to load the model on, 
                 can be 'cpu', 'cuda' or 'cuda:X'.
             - self.__batch_size (int): the batch size used during the testing.
+            - self.__batch_export (int): the batch size to write files when exporting 
+                the files
 
             COMMUNICATION AND SECURITY
             - self.__logger (CustomLogger): will give information as the data is 
@@ -111,6 +113,8 @@ class ExportEmbeddingsForOneEpoch:
         
         if not(os.path.exists(f"{foldername_model}/embeddings/epoch_{epoch}")):
             os.makedirs(f"{foldername_model}/embeddings/epoch_{epoch}")
+
+        self.__batch_export = 2500
     
     def __get_embeddings(self, dataset : Dataset) -> tuple[pd.DataFrame, Tensor]:
         """Private function to generate the embeddings and the labels.
@@ -164,9 +168,12 @@ class ExportEmbeddingsForOneEpoch:
         """
         train_dataset : Dataset = concatenate_datasets(
             (self.__ds["train"], self.__ds["eval"]))
-        df_labels, embeddings = self.__get_embeddings(train_dataset)
-        df_labels.to_csv(f"{self.__foldername}/embeddings/epoch_{self.__epoch}/train_labels.csv", index = False)
-        save(embeddings, f"{self.__foldername}/embeddings/epoch_{self.__epoch}/train_embeddings.pt")
+        for i, ds_batch in enumerate(train_dataset.batch(self.__batch_export, drop_last_batch=False)):
+            ds_batch = Dataset.from_dict(ds_batch)
+            df_labels, embeddings = self.__get_embeddings(ds_batch)
+            df_labels.to_csv(f"{self.__foldername}/embeddings/epoch_{self.__epoch}/train_labels-{i:04}.csv", index = False)
+            save(embeddings, f"{self.__foldername}/embeddings/epoch_{self.__epoch}/train_embeddings-{i:04}.pt")
+            del df_labels, embeddings
         
         # Logging
         self.__logger((f"(Epoch {self.__epoch}, checkpoint {self.__checkpoint}) "
@@ -185,11 +192,12 @@ class ExportEmbeddingsForOneEpoch:
         --------
             /
         """
-        for i, ds_batch in enumerate(self.__ds["test"].batch(1000, drop_last_batch=False)):
+        for i, ds_batch in enumerate(self.__ds["test"].batch(self.__batch_export, drop_last_batch=False)):
             ds_batch = Dataset.from_dict(ds_batch)
             df_labels, embeddings = self.__get_embeddings(ds_batch)
             df_labels.to_csv(f"{self.__foldername}/embeddings/epoch_{self.__epoch}/test_labels-{i:04}.csv", index = False)
             save(embeddings, f"{self.__foldername}/embeddings/epoch_{self.__epoch}/test_embeddings-{i:04}.pt")
+            del df_labels, embeddings
         
         # Logging
         self.__logger((f"(Epoch {self.__epoch}, checkpoint {self.__checkpoint}) "
