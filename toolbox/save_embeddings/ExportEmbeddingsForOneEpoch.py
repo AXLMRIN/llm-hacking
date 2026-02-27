@@ -140,7 +140,7 @@ class ExportEmbeddingsForOneEpoch:
                     key : Tensor(batch[key]).int().to(device=self.device)
                     for key in ['input_ids', 'attention_mask']
                 }
-
+                #BUG THIS IS NOT THE RIGHT EMBEDDING
                 batch_embeddings = self.__model.base_model(**model_input).\
                     last_hidden_state[:,0,:].squeeze()
                 
