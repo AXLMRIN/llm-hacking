@@ -185,9 +185,11 @@ class ExportEmbeddingsForOneEpoch:
         --------
             /
         """
-        df_labels, embeddings = self.__get_embeddings(self.__ds["test"])
-        df_labels.to_csv(f"{self.__foldername}/embeddings/epoch_{self.__epoch}/test_labels.csv", index = False)
-        save(embeddings, f"{self.__foldername}/embeddings/epoch_{self.__epoch}/test_embeddings.pt")
+        for i, ds_batch in self.__ds.batch(1000, drop_last_batch=False):
+            ds_batch = Dataset.from_dict(ds_batch)
+            df_labels, embeddings = self.__get_embeddings(ds_batch)
+            df_labels.to_csv(f"{self.__foldername}/embeddings/epoch_{self.__epoch}/test_labels-{i:04}.csv", index = False)
+            save(embeddings, f"{self.__foldername}/embeddings/epoch_{self.__epoch}/test_embeddings-{i:04}.pt")
         
         # Logging
         self.__logger((f"(Epoch {self.__epoch}, checkpoint {self.__checkpoint}) "
