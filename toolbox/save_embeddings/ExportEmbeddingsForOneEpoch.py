@@ -141,13 +141,12 @@ class ExportEmbeddingsForOneEpoch:
                     for key in ['input_ids', 'attention_mask']
                 }
 
-                # batch_embeddings = self.__model.base_model(**model_input).\
-                #     last_hidden_state[:,0,:].squeeze()
-
-                batch_embeddings : Tensor = self.__model.base_model(**model_input).\
-                    pooler_output.detach().cpu()
+                batch_embeddings = self.__model.base_model(**model_input).\
+                    last_hidden_state[:,0,:].squeeze()
                 
-                logits : np.ndarray = self.__model.classifier(**batch_embeddings).\
+                # Has to do it twice because the output of the base model depends 
+                # on the pretrained model
+                logits : np.ndarray = self.__model(**batch_embeddings).\
                     detach().cpu().numpy()
                 
                 batch_df_labels = pd.DataFrame({
