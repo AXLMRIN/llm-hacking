@@ -116,6 +116,7 @@ class ExportEmbeddingsForOneEpoch:
         # Load id2label from training datahandler config
         with open(f"{foldername_model}/data/DataHandler_config.json", "r") as file:
             self.__id2label = json.load(file)["id2label"].copy()
+        print("self.__id2label : ", self.__id2label)
                 
         if not(os.path.exists(f"{foldername_model}/embeddings/epoch_{epoch}")):
             os.makedirs(f"{foldername_model}/embeddings/epoch_{epoch}")
