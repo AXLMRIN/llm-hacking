@@ -118,7 +118,7 @@ class ExportEmbeddingsForOneEpoch:
             # modify for keys to be integers
             self.__id2label = {
                 int(key): value
-                for key, value in json.load(file)["id2label"]
+                for key, value in json.load(file)["id2label"].items()
             }
                 
         if not(os.path.exists(f"{foldername_model}/embeddings/epoch_{epoch}")):
