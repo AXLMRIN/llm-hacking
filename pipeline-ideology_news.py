@@ -81,31 +81,24 @@ try :
         [0] # First item
         [0] # epoch number
     )
-    logger(f"After testing, best epoch : {best_epoch}")
+    logger(f"\n\nAfter testing, best epoch : {best_epoch}\n\n")
 
     # Step 3 - Saving embeddings
-    (
-        ExportEmbeddingsForOneEpoch(
-            foldername_model=output_dir,
-            epoch = best_epoch,
-            logger = logger,
-            # foldername_data=
-            batch_size = MACHINE_BATCH_SIZE * 2
-        )
-        .routine(delete_files_after_routine=True)
-    )
-    # (
-    #     ExportEmbeddingsForAllEpochs(
-    #         output_dir,
-    #         logger = logger, 
-    #         batch_size=MACHINE_BATCH_SIZE * 2
-    #     )
-    #     .routine(
-    #         foldername_data = "./data/DataHandlerForInference",
-    #         delete_files_after_routine=True
-    #     )
-    # )
-    logger.notify_when_done("Routine S12-ideology_news")
+    for epoch in tqdm(range(1, N_EPOCH + 1) , desc="Exporting"):
+        export_routine = ExportEmbeddingsForOneEpoch(
+                foldername_model=output_dir,
+                epoch = best_epoch,
+                logger = logger,
+                # foldername_data=
+                batch_size = MACHINE_BATCH_SIZE * 2
+            )
+        if epoch == best_epoch:
+            export_routine.routine()
+        export_routine.delete_files()
+        del export_routine
+        clean()
+
+    logger.notify_when_done("Routine ideology_news")
 except Exception as e:
     print("#" * 100)
     print(f"ERROR during {model} - {learning_rate}")

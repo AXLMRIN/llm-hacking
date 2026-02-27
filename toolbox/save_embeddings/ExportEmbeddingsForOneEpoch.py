@@ -193,7 +193,7 @@ class ExportEmbeddingsForOneEpoch:
                        "Test embeddings saved. "
                        f"Folder : {self.__foldername}/embeddings/epoch_{self.__epoch}/"))
         
-    def __delete_files(self) -> None:
+    def delete_files(self) -> None:
         """Delete "model.safetensors" and "optimizer.pt" to save space.
 
         Parameters:
