@@ -238,5 +238,5 @@ class ExportEmbeddingsForOneEpoch:
         del self.__ds, self.__model
         clean()
         if delete_files_after_routine:
-            self.__delete_files()
+            self.delete_files()
     
