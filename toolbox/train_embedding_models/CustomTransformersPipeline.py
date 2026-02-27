@@ -311,14 +311,6 @@ class CustomTransformersPipeline:
             raise ValueError((f"Training Pipeline could not load the tokenizer "
                               f"and model.\n\nError:\n{e}"))
         ###
-        try :
-            self.__data.encode(self.tokenizer, self.tokenizing_parameters)
-        except Exception as e:
-            del self.model, self.__data, self.tokenizer
-            clean()
-            raise ValueError((f"Training Pipeline could not encode the dataset."
-                              f"\n\nError:\n{e}"))
-        ###
         if debug_mode : 
             try : 
                 self.__data.debug_mode()
@@ -327,6 +319,14 @@ class CustomTransformersPipeline:
                 clean()
                 raise ValueError((f"Training Pipeline could not set data into"
                                   f" debugging mode.\n\nError:\n{e}"))
+        ###
+        try :
+            self.__data.encode(self.tokenizer, self.tokenizing_parameters)
+        except Exception as e:
+            del self.model, self.__data, self.tokenizer
+            clean()
+            raise ValueError((f"Training Pipeline could not encode the dataset."
+                              f"\n\nError:\n{e}"))
         ###
         try:
             output = self.train()
