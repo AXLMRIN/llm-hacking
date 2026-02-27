@@ -1,4 +1,5 @@
 # IMPORTS ######################################################################
+import json
 import os
 from pathlib import Path
 
@@ -112,8 +113,13 @@ class ExportEmbeddingsForOneEpoch:
             from_pretrained(f"{foldername_model}/{self.__checkpoint}").\
             to(device = self.device)
         
+        # Load id2label from training datahandler config
+        with open(f"{foldername_model}/data/DataHandler_config.json", "r") as file:
+            self.__id2label = json.load(file)["id2label"].copy()
+                
         if not(os.path.exists(f"{foldername_model}/embeddings/epoch_{epoch}")):
             os.makedirs(f"{foldername_model}/embeddings/epoch_{epoch}")
+
 
         self.__batch_export = 2500
     
@@ -152,7 +158,8 @@ class ExportEmbeddingsForOneEpoch:
                 batch_df_labels = pd.DataFrame({
                     "LABEL-GS": list(batch["LABEL"]), 
                     "ID": list(batch["ID"]),
-                    "LABEL-PRED": [np.argmax(row).item() for row in logits]
+                    "LABEL-PRED": [self.__id2label[np.argmax(row).item()] 
+                                   for row in logits]
                 })
 
                 if embeddings is None: embeddings = batch_embeddings
