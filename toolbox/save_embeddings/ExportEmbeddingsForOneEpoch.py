@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from datasets import load_from_disk, Dataset, DatasetDict, concatenate_datasets
+import numpy as np
 import pandas as pd
 from torch import Tensor, no_grad, cat, save
 from torch.cuda import is_available as cuda_available
@@ -131,20 +132,29 @@ class ExportEmbeddingsForOneEpoch:
         """
         with no_grad():
             embeddings = None
-            df_labels = pd.DataFrame(columns=["ID", "LABEL-GS"])
+            df_labels = pd.DataFrame(columns=["ID", "LABEL-GS", "LABEL-PRED"])
 
             for batch in dataset.batch(self.__batch_size, drop_last_batch=False): 
-                batch_df_labels = pd.DataFrame({
-                    "LABEL-GS": list(batch["LABEL"]), 
-                    "ID": list(batch["ID"])
-                })
                 
                 model_input = {
                     key : Tensor(batch[key]).int().to(device=self.device)
                     for key in ['input_ids', 'attention_mask']
                 }
-                batch_embeddings = self.__model.base_model(**model_input).\
-                    last_hidden_state[:,0,:].squeeze()
+
+                # batch_embeddings = self.__model.base_model(**model_input).\
+                #     last_hidden_state[:,0,:].squeeze()
+
+                batch_embeddings : Tensor = self.__model.base_model(**model_input).\
+                    pooler_output.detach().cpu()
+                
+                logits : np.ndarray = self.__model.classifier(**batch_embeddings).\
+                    detach().cpu().numpy()
+                
+                batch_df_labels = pd.DataFrame({
+                    "LABEL-GS": list(batch["LABEL"]), 
+                    "ID": list(batch["ID"]),
+                    "LABEL-PRED": [np.argmax(row).item() for row in logits]
+                })
 
                 if embeddings is None: embeddings = batch_embeddings
                 else :                 embeddings = cat((embeddings,batch_embeddings), 
