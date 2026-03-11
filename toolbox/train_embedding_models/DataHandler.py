@@ -391,6 +391,9 @@ class DataHandler :
                 "label_column" : self.__label_column, 
                 "id_column" : self.__id_column, 
                 "len" : self.len,
+                "N_train": self.N_train,
+                "N_eval": self.N_eval,
+                "N_test": self.N_test,
                 "columns" : self.columns
             }
             json.dump(config, file, ensure_ascii=True, indent=4)
