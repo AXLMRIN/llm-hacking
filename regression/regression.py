@@ -6,8 +6,8 @@ def perform_regression(df: pd.DataFrame, y_column: str, x_column: str
     """
     Perform logit regression and returns key values
     """
-    Y = df[y_column].to_numpy().astype(int)
-    X = df[x_column].to_numpy().astype(int)
+    Y = df[y_column].to_numpy().astype(int) # [1, 0, 0, 1, ...]
+    X = df[x_column].to_numpy().astype(int) # [1, 0, 1, 0, ...]
     X = sm.add_constant(X)
     try: 
         model = sm.Logit(Y,X)
