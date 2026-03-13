@@ -10,8 +10,8 @@ def perform_regression(df: pd.DataFrame, y_column: str, x_column: str
     X = df[x_column].to_numpy().astype(int) # [1, 0, 1, 0, ...]
     X = sm.add_constant(X)
     try: 
-        model = sm.Logit(Y,X)
-        res = model.fit()
+        model = sm.Logit(Y,X,)
+        res = model.fit(maxiter=100)
 
         return {
             "Pseudo R-squared": res.prsquared,
