@@ -27,6 +27,7 @@ def perform_regression(df: pd.DataFrame, y_column: str, x_column: str
             "AIC": res.aic,
             "BIC": res.bic,
             "N obs": res.nobs,
+            "N iterations": res.mle_retvals["iterations"],
         }
     except: 
         return {
@@ -43,4 +44,5 @@ def perform_regression(df: pd.DataFrame, y_column: str, x_column: str
             "AIC": "FAILED",
             "BIC": "FAILED",
             "N obs": "FAILED",
+            "N iterations": "FAILED",
         } 
