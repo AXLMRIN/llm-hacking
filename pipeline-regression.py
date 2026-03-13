@@ -59,9 +59,11 @@ def prepare_data(path_result: str, model_iteration: str):
 
 PATH_RESULT = "./results/ideology_news_dichotomized"
 MODEL_NAME = "answerdotai/ModernBERT-base"
+full_results = {}
 counter = 0
 for model_iteration in os.listdir(PATH_RESULT):
     if not os.path.isdir(f"{PATH_RESULT}/{model_iteration}"): continue  # Skip for non directories
+    
     df, x_columns_list, model_metadata = prepare_data(PATH_RESULT, model_iteration)
     # create_dummies:
     for topic in df["topic"].unique():
@@ -70,10 +72,8 @@ for model_iteration in os.listdir(PATH_RESULT):
         df.loc[:,f"S-{source}"] = (df["source"] == source).copy()
 
     y_columns_list = [col for col in df.columns if col.startswith("T-")] + [col for col in df.columns if col.startswith("S-")]
-    full_results = {}
     for x_column in x_columns_list:
         for y_column in y_columns_list:
-            print(x_column, y_column)
             full_results[counter] = {
                 **perform_regression(df = df, y_column = y_column, x_column = x_column),
                 "x_column" : x_column,
