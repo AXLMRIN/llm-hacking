@@ -15,7 +15,7 @@ def perform_regression(df: pd.DataFrame, y_column: str, x_column: str
 
         return {
             "Pseudo R-squared": res.prsquared,
-            "Covariate Names": ["const", "x1"], # FIX is there a best way of doing this? 
+            "Covariate Names": model.exog_names,
             "Coef": res.params.tolist(),
             "Std err": res.bse.tolist(),
             "z": res.tvalues.tolist(),          # z-statistics
@@ -31,7 +31,7 @@ def perform_regression(df: pd.DataFrame, y_column: str, x_column: str
     except: 
         return {
             "Pseudo R-squared": "FAILED",
-            "Covariate Names": "FAILED", # FIX is there a best way of doing this? 
+            "Covariate Names": "FAILED", 
             "Coef": "FAILED",
             "Std err": "FAILED",
             "z": "FAILED",          # z-statistics
