@@ -2,6 +2,7 @@ import os
 import json 
 
 import pandas as pd 
+from sklearn.metrics import f1_score
 from torch import load
 
 from regression import perform_regression
@@ -71,6 +72,12 @@ for model_iteration in os.listdir(PATH_RESULT):
     for source in df["source"].unique():
         df.loc[:,f"S-{source}"] = (df["source"] == source).copy()
 
+    score_on_current_sample = f1_score(
+        y_true=df[x_columns_list[0]].to_numpy(),
+        y_pred=df[x_columns_list[1]].to_numpy(),
+        average="macro"
+    )
+
     y_columns_list = [col for col in df.columns if col.startswith("T-")] + [col for col in df.columns if col.startswith("S-")]
     for x_column in x_columns_list:
         for y_column in y_columns_list:
@@ -79,6 +86,7 @@ for model_iteration in os.listdir(PATH_RESULT):
                 "x_column" : x_column,
                 "y_column" : y_column,
                 "model" : MODEL_NAME,
+                "Score on sample": score_on_current_sample,
                 **model_metadata
             }
             counter += 1
