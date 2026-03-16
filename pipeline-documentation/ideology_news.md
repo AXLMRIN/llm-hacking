@@ -2,7 +2,7 @@
 
 **Downloaded from:** [Github/Article Bias Prediction](https://github.com/ramybaly/Article-Bias-Prediction/tree/main/) (2026-02-17)
 
-**Description**
+## Description
 
 - Columns of interest: topic (108 unique, ex: "politics", "china", don't know how relevant and reliable); source (491 unique, ex: "Politico", "Bloomberg", don't know how relevant and reliable); "bias" ("left", "right", "center"); content (text clean); ID; date (publication date, don't know how reliable, but mostly clean).
 - classification task: classify the content as "left", "right" or "center" (dichotomized)
@@ -20,7 +20,7 @@ df_raw["content"].apply(len).describe()
 # Name: content, dtype: float64
 ```
 
-**Preprocessing**
+## Preprocessing
 
 Preprocess file: `preprocessing-data/preprocess-ideology_news.ipynb`:
 
@@ -68,7 +68,7 @@ After creating the datasets I have dichotomized each label, for both datasets.
 
 For the inference dataset, I have created a specific folder to match the Training pipeline (`make-dataset-dict-for-inference.py`). This is basically creating a `DatasetDict` with a train, valid and test split and shoving all items in the `test-split`. Then , I encode the 10,000 text inputs with the appropriate tokenizer.
 
-**Training**
+## Training
 
 File: `pipeline-ideology_news.py`
 
@@ -82,7 +82,7 @@ I repeath the pipeline for the following hyperparameters:
 
 total number of pipelines: 36 (= $\underbrace{3}_{bias} \times \underbrace{1}_{model} \times \underbrace{4}_{learning\ rate} \times \underbrace{3}_{weight\ decay}$`)
 
-**Regression**
+## Regression
 
 File: `pipeline-regression.py`
 
@@ -120,7 +120,7 @@ as well as metadata from the model:
 
 [^1]: This figure differs from the one presented in the **Description** (491), this is a result of many sources with only one article in the whole corpus. The 246 sources correspond to the sources of the 10,000 articles from the inference set.
 
-**First results analysis**
+## First results analysis
 
 File: `analyse-results-ideology-news.ipynb`
 
