@@ -102,17 +102,173 @@ Sortie d'intérêt de la pipeline:
 
 ### Regression
 
-- Regression des labels (prédits / gold) sur une métadonnée du jeux origine (binarisée). (ex: `sm.Logit(y = df["topic-economy"], X = df["label-centre])) 
+- Regression d'une métadonnée du jeux origine (binarisée) sur les labels (prédits / gold). (ex: `sm.Logit(y = df["label-centre]), X = df["topic-economy"]) 
 - Sauvegarde des données de regression:
     - `Pseudo R-squared`
     - `Coef`
     - `Std err`
-    - `z`
+    - `z`🟠
     - `pvalues`
     - `Conf Int`
     - `Log-Likelihood`
     - `LL-Null`
     - `LLR p-value`
-    - `AIC`
-    - `BIC`
-    - `N obs`
+    - `AIC`🟠
+    - `BIC`🟠
+    - `N obs`🟠
+    - `N iterations`
+    - 🟠: "à prioris inutile"
+- Analyse des résultats:
+    - Filtrer les regressions qui n'ont pas fonctionné (`res_success = res.loc['FAILED' != res['Coef']]`)
+    - Créer des paires de regressions
+        - grouper par dataset 
+        - grouper par hypotèse (covariate explique label) — i.e. covariate x label
+        - grouper par configuration (modele, learning rate etc..)
+        - exemple: 
+        ```python
+        (
+            res_success
+            .groupby([
+                "dataset" # ideology_news; misinfo; manifesto
+                "label", "x_column",  # hypothesis
+                "model", "learning_rate", "weight_decay" # configuration
+            ])
+        )
+        ```
+        - Chaque groupe devrait contenir 2 regressions, une où le label est gold-standard et un ou le label est prédit
+    - Filtrer les couples de regression avec une regression manquante `valid_for_comparison = res_success.groupby([ ... ]).size() == 2`
+    - Pour chaque groupe de regression évaluer la présence d'erreur
+        - `error_type_1 : bool = pred_significant and not GS_significant`
+        - `error_type_2 : bool = GS_significant and not pred_significant`
+        - `error_type_S : bool = pred_significant and GS_significant and (GS_coef * pred_coef < 0)`
+        - `error_type_M : float = pred_significant and GS_significant and (GS_coef * pred_coef < 0) * magnitude_coef`
+        - _voir `analyse-regression-results.py` pour les détails_
+    - Évaluer les risques d'après la définition du papier
+        - Type I Risk 
+        $$
+        = \frac1{|T|}\sum_{t\in T}\frac1{|H_t^0|}\sum_{h\in H_t^0}\frac1{|\Phi|}\sum_{\phi \in \Phi}\mathbb 1\left[S_{h,\phi}^{LLM} = 1\right]
+        $$
+        code: 
+        ```python
+        risk = 0 
+        T = 0
+        PHI = len(unique_configs) # configs independantes de la tâche (dataset + labels) et des regressions
+        for dataset in unique_datasets:
+            T += len(unique_labels[dataset])
+            for label in unique_labels[dataset]:
+                H_t_0_counter = 0
+                hypothesis_risk_counter = 0
+                for covariate in unique_covariates[dataset]:
+                    if GS_significant[dataset, label, covariate] == 0: # i.e. non signifiant
+                        H_t_0_counter += 1
+                        config_risk_counter = 0
+                        for config in unique_configs:
+                            if (pred_significant[dataset, label, covariate, config] == 1):  # i.e. signifiant
+                                config_risk_counter += 1
+                        hypothesis_risk_counter += config_risk_counter / PHI
+                risk += hypothesis_risk_counter / H_t_0_counter
+        risk_I = risk / T
+        ```
+        - Type II Risk 
+        $$
+        = \frac1{|T|}\sum_{t\in T}\frac1{|H_t^1|}\sum_{h\in H_t^1}\frac1{|\Phi|}\sum_{\phi \in \Phi}\mathbb 1\left[S_{h,\phi}^{LLM} = 0\right]
+        $$
+        code: 
+        ```python
+        risk = 0 
+        T = 0
+        PHI = len(unique_configs) # configs independantes de la tâche (dataset + labels) et des regressions
+        for dataset in unique_datasets:
+            T += len(unique_labels[dataset])
+            for label in unique_labels[dataset]:
+                H_t_1_counter = 0
+                hypothesis_risk_counter = 0
+                for covariate in unique_covariates[dataset]:
+                    if GS_significant[dataset, label, covariate] == 1: # i.e. signifiant
+                        H_t_1_counter += 1
+                        config_risk_counter = 0
+                        for config in unique_configs:
+                            if (pred_significant[dataset, label, covariate, config] == 0):  # i.e. non signifiant
+                                config_risk_counter += 1
+                        hypothesis_risk_counter += config_risk_counter / PHI
+                risk += hypothesis_risk_counter / H_t_1_counter
+        risk_II = risk / T
+        ```
+        - Type S Risk 
+        $$
+        = \frac1{|T|}\sum_{t\in T}\frac1{|H_t^1|}\sum_{h\in H_t^1}\frac1{|\Phi|}\sum_{\phi \in \Phi}\mathbb 1\left[S_{h,\phi}^{LLM} = 1, sgn(\beta^{GT}_h) \neq sgn(\beta^{LLM}_{h,\phi}\right]
+        $$
+        code: 
+        ```python
+        risk = 0 
+        T = 0
+        PHI = len(unique_configs) # configs independantes de la tâche (dataset + labels) et des regressions
+        for dataset in unique_datasets:
+            T += len(unique_labels[dataset])
+            for label in unique_labels[dataset]:
+                H_t_1_counter = 0
+                hypothesis_risk_counter = 0
+                for covariate in unique_covariates[dataset]:
+                    if GS_significant[dataset, label, covariate] == 1: # i.e. signifiant
+                        H_t_1_counter += 1
+                        config_risk_counter = 0
+                        for config in unique_configs:
+                            if (
+                                pred_significant[dataset, label, covariate, config] == 1 # i.e. signifiant
+                                and
+                                coef_GT[dataset, label, covariate] * coef_pred[dataset, label, covariate, config] < 0 # i.e. pas meme signe
+                            ): 
+                                config_risk_counter += 1
+                        hypothesis_risk_counter += config_risk_counter / PHI
+                risk += hypothesis_risk_counter / H_t_1_counter
+        risk_S = risk / T
+        ```
+        - Type M Risk 
+        $$
+        = \frac1{|T|}\sum_{t\in T}\frac1{|H_t^1|}\sum_{h\in H_t^1}\frac1{|\Phi|}\sum_{\phi \in \Phi}\mathbb 1\left[S_{h,\phi}^{LLM} = 1, sgn(\beta^{GT}_h) \neq sgn(\beta^{LLM}_{h,\phi}\right]
+        $$
+        code: 
+        ```python
+        risk = 0 
+        T = 0
+        PHI = len(unique_configs) # configs independantes de la tâche (dataset + labels) et des regressions
+        for dataset in unique_datasets:
+            T += len(unique_labels[dataset])
+            for label in unique_labels[dataset]:
+                H_t_1_counter = 0
+                hypothesis_risk_counter = 0
+                for covariate in unique_covariates[dataset]:
+                    if GS_significant[dataset, label, covariate] == 1: # i.e. signifiant
+                        H_t_1_counter += 1
+                        config_risk_counter = 0
+                        for config in unique_configs:
+                            if (
+                                pred_significant[dataset, label, covariate, config] == 1 # i.e. signifiant
+                                and
+                                coef_GT[dataset, label, covariate] * coef_pred[dataset, label, covariate, config] > 0 # i.e. meme signe
+                            ): 
+                                delta_p_pred = abs(
+                                    (labels_pred[dataset, label, covariate, config] == 1).mean()
+                                    - 
+                                    (labels_pred[dataset, label, covariate, config] == 0).mean()
+                                )
+                                delta_p_GS = abs(
+                                    (labels_GS[dataset, label, covariate] == 1).mean()
+                                    - 
+                                    (labels_GS[dataset, label, covariate] == 0).mean()
+                                )
+                                config_risk_counter += abs(
+                                    (delta_p_pred - delta_p_GS)
+                                    / 
+                                    delta_p_GS
+                                )
+                        hypothesis_risk_counter += config_risk_counter / PHI
+                risk += hypothesis_risk_counter / H_t_1_counter
+        risk_M = risk / T
+        ```
+
+        - Discussion à avoir:
+            - T représente l'ensemble des tâches, tandis que $H_t$ l'ensemble des hypothèses. D'après notre lecture, (Alexandre et Axel), on comprend que T revient à être la somme du nombre de tâches de classification à travers les jeux de données (i.e. $\sum_{d\in datasets}N^{labels}_d$ ) tandis que $H_t$ l'ensemble des regressions réalisé par label et par dataset (i.e. le nombre de covariates par dataset $\sum_{d\in datasets}N^{cov}_d$).
+            - Les quantités "Risk" sont des moyennes, de moyennes, de moyennes, ... est-ce bien serieux?
+            - aussi, il ne semble pas y avoir de contrôle sur la qualité des regressions (pas de filtre sur le F-score, ni le respect des hypothèses sur les erreurs). Est ce que le risque n'englobe pas tout un tas de regression qui seraient recallées en faisant les choses correctement? 
+
