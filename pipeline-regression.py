@@ -11,21 +11,23 @@ counter = 0
 
 for model_iteration in os.listdir(f"{PATH_RESULT}/{DATASET_NAME}"):
 
-    if not os.path.isdir(f"{PATH_RESULT}/{model_iteration}"): continue  # Skip for non directories
+    if not os.path.isdir(f"{PATH_RESULT}/{DATASET_NAME}/{model_iteration}"): 
+        continue  # Skip for non directories
     
     (
         df, 
         dependant_variables_columns,
         independant_variables_columns, 
         model_metadata
-    ) = prepare_data(PATH_RESULT, model_iteration)
+    ) = prepare_data(f"{PATH_RESULT}/{DATASET_NAME}", model_iteration)
 
     for dependant_variable in dependant_variables_columns:
         for independant_variable in independant_variables_columns:
             full_results[counter] = {
                 "R-ID" : f"Reg-{counter:06}",
                 "task" : f"{DATASET_NAME}-{model_metadata['label_dichotomized']}",
-                "hypothesis": f"{dependant_variable}~{independant_variable}",
+                "hypothesis": f"{model_metadata['label_dichotomized']}~{independant_variable}",
+                "label-type": dependant_variable.split("-")[-1],
                 "model" : MODEL_NAME,
                 **model_metadata,
                 "x_column" : independant_variable,
@@ -38,5 +40,5 @@ for model_iteration in os.listdir(f"{PATH_RESULT}/{DATASET_NAME}"):
             }
             counter += 1
 
-with open(f"{PATH_RESULT}/{DATASET_NAME}-regression-results.json", "w") as file:
+with open(f"{PATH_RESULT}/{DATASET_NAME}/{DATASET_NAME}-regression-results.json", "w") as file:
     json.dump(full_results, file, indent = 4, ensure_ascii = True)
