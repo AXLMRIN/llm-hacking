@@ -121,20 +121,9 @@ Sortie d'intérêt de la pipeline:
 - Analyse des résultats:
     - Filtrer les regressions qui n'ont pas fonctionné (`res_success = res.loc['FAILED' != res['Coef']]`)
     - Créer des paires de regressions
-        - grouper par dataset 
-        - grouper par hypotèse (covariate explique label) — i.e. covariate x label
+        - grouper par task (dataset x label)
+        - grouper par hypotèse (covariate explique label) — i.e. covariate
         - grouper par configuration (modele, learning rate etc..)
-        - exemple: 
-        ```python
-        (
-            res_success
-            .groupby([
-                "dataset" # ideology_news; misinfo; manifesto
-                "label", "x_column",  # hypothesis
-                "model", "learning_rate", "weight_decay" # configuration
-            ])
-        )
-        ```
         - Chaque groupe devrait contenir 2 regressions, une où le label est gold-standard et un ou le label est prédit
     - Filtrer les couples de regression avec une regression manquante `valid_for_comparison = res_success.groupby([ ... ]).size() == 2`
     - Pour chaque groupe de regression évaluer la présence d'erreur
