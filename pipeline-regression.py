@@ -5,13 +5,14 @@ from regression import perform_regression, prepare_data
 
 PATH_RESULT = "./results"
 DATASET_NAME = "ideology_news_dichotomized"
-MODEL_NAME = "answerdotai/ModernBERT-base"
+MODEL_NAME = "ibm-granite/granite-embedding-small-english-r2"
+PATH_TO_DATA = f"{PATH_RESULT}/{DATASET_NAME}/{MODEL_NAME}"
 full_results = {}
 counter = 0
 
-for model_iteration in os.listdir(f"{PATH_RESULT}/{DATASET_NAME}"):
+for model_iteration in os.listdir(PATH_TO_DATA):
 
-    if not os.path.isdir(f"{PATH_RESULT}/{DATASET_NAME}/{model_iteration}"): 
+    if not os.path.isdir(f"{PATH_TO_DATA}/{model_iteration}"): 
         continue  # Skip for non directories
     
     (
@@ -19,7 +20,7 @@ for model_iteration in os.listdir(f"{PATH_RESULT}/{DATASET_NAME}"):
         dependant_variables_columns,
         independant_variables_columns, 
         model_metadata
-    ) = prepare_data(f"{PATH_RESULT}/{DATASET_NAME}", model_iteration)
+    ) = prepare_data(PATH_TO_DATA, model_iteration)
 
     for dependant_variable in dependant_variables_columns:
         for independant_variable in independant_variables_columns:
@@ -40,5 +41,5 @@ for model_iteration in os.listdir(f"{PATH_RESULT}/{DATASET_NAME}"):
             }
             counter += 1
 
-with open(f"{PATH_RESULT}/{DATASET_NAME}/{DATASET_NAME}-regression-results.json", "w") as file:
+with open(f"{PATH_TO_DATA}-regression-results.json", "w") as file:
     json.dump(full_results, file, indent = 4, ensure_ascii = True)
