@@ -28,15 +28,54 @@ repo for llm-hacking investigation.
 
 - **Pour chaque label, entraînement d'un classifieur binaire**
 - Ensemble d'hyperparamètres pouvant être explorés:
-    - `N_train`
+    - `N_train` ⚠️ est ce qu'il y a suffisamment de données pour toutes les tâches? 
+        - 500
+        - 1000
+        - 1500
+        - 2000
+    - `train_ratio` `train-eval-ratio`(eval dans training loop) `test-ratio` (evalue la F1)
+        - 80-10-10
+        - 70-15-15
+        - 50-10-40 ⚠️ à rediscuter
     - `balanced_dataset` (l'ensemble d'entraînement contient 50% de labels True, 50% de labels false)
-    - `model`
-    - `learning_rate`
-    - `weight_decay`
-    - `dropout`
-    - `warmup_ratio` ???
-    - Hyperparamètres supplémentaires: `pooling_method`, `sampling_method` (active ou random)
+        - 25% de valeurs positives
+        - 50% de valeurs positives
+        - 75% de valeurs positives
+    - `model`: contraintes: "multilingue" + fenetre de contexte max > 3,000 + fenetre roulantes ? 
+        - [MBERT](https://huggingface.co/google-bert/bert-base-multilingual-cased) ⚠️ rolling window
+        - [mmnert - multilingual modern bert](https://huggingface.co/blog/mmbert) 
+        - [xlm-roberta](https://huggingface.co/docs/transformers/model_doc/xlm-roberta) ⚠️ rolling window
+        - [multilingual E5](https://huggingface.co/intfloat/multilingual-e5-large) ⚠️ rolling window
+    - `context_window_size`:
+        - 100% max
+        - 75% max
+        - 50% max
+    - `learning_rate` ⚠️ qu'est ce que ça représente à la fin? Est ce que ça rentre dans les configuration non-raisonnables? **A mettre en avant**
+        - 5e-4 
+        - 1e-4
+        - 1e-5 
+        - 2e-5 
+        - 5e-5
+    - `weight_decay`: 
+        - 0.0
+        - 0.01
+        - 0.001
+        - 0.05
+    - `dropout`:
+        - 0.1
+        - 0.2
+    - `warmup_ratio` 
+        - 0.05
+        - 0.1
+        - 0.15
+    - `pooling_method`
+        - first (CLS)
+        - mean
+        - max
+    - *Hyperparamètres supplémentaires: `sampling_method` (active ou random)*
 - On génère les labels sur l'ensemble d'inférence.
+
+Retravailler leur risque? comment on fait pour pondérer correctement enlever des configs absured
 
 _Exemple de pipeline:_ `pipeline-ideology_news.py`
 
@@ -102,22 +141,19 @@ Sortie d'intérêt de la pipeline:
 
 ### Regression
 
-- Regression d'une métadonnée du jeux origine (binarisée) sur les labels (prédits / gold). (ex: `sm.Logit(y = df["label-centre]), X = df["topic-economy"]) 
+- Regression d'une métadonnée du jeux origine (binarisée) sur les labels (prédits / gold). (ex: `sm.Logit(y = df["label-centre], X = df["topic-economy"]) 
 - Sauvegarde des données de regression:
     - `Pseudo R-squared`
     - `Coef`
     - `Std err`
-    - `z`🟠
     - `pvalues`
     - `Conf Int`
     - `Log-Likelihood`
     - `LL-Null`
     - `LLR p-value`
-    - `AIC`🟠
-    - `BIC`🟠
-    - `N obs`🟠
+    - `AIC`
+    - `BIC`
     - `N iterations`
-    - 🟠: "à prioris inutile"
 - Analyse des résultats:
     - Filtrer les regressions qui n'ont pas fonctionné (`res_success = res.loc['FAILED' != res['Coef']]`)
     - Créer des paires de regressions
