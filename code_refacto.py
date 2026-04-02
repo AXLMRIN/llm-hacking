@@ -134,3 +134,13 @@ for dataset_info in config_json["datasets"]:
             
             break
         break
+
+#TODO
+"""
+- remove the breaks
+- check that the configuration was not already computed before training, prevent from computing twice
+- Add seed to training ???
+- CHECK FOR MISTAKES
+- check if works on GPU
+- RESET environments and code versions to run all required models; update code if need be 
+"""
