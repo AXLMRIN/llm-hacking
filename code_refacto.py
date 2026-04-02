@@ -42,7 +42,7 @@ for dataset_info in config_json["datasets"]:
         dichotomized_df_prediction, _, _ = dichotomize(df_prediction, label)
         for local_config in product(*parameters_values):
             loop_config = {n: v for n,v in zip(parameter_names,local_config)}
-            model, tokenizer, ds_loop, dsd_loop = (None, )*4
+            model, tokenizer, ds_loop, dsd_loop, ds_pred, predictions = (None, )*6
             try: 
                 # Prepare tokenizer: model_name, context_window_rel_to_max
                 tokenizer = load_tokenizer(**loop_config)
@@ -130,7 +130,7 @@ for dataset_info in config_json["datasets"]:
                         json.dump(saving_logs, file, ensure_ascii=True, indent=4)
             
             except Exception as e:print(f"Error in loop\n{e}")
-            finally: del model, tokenizer, ds_loop, dsd_loop; clean()
+            finally: del model, tokenizer, ds_loop, dsd_loop, ds_pred, predictions, ; clean()
             
             break
         break
