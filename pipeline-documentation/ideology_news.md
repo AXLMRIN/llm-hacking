@@ -86,7 +86,7 @@ total number of pipelines: 36 (= $\underbrace{3}_{bias} \times \underbrace{1}_{m
 
 File: `pipeline-regression.py`
 
-For each model (N = 36), I perform 364 logistic regressions (246 sources[^1], 108 topics) twice, once for the predicted labels ($label_{pred}\sim source|topic$) and once for the gold standard labels ($label_{pred}\sim source|topic$) which results in 25,488 regressions ($= \underbrace{36}_{fine\ tuned\ models}\times \underbrace{2}_{predicted | gold standard}\times(\underbrace{246}_{sources} + \underbrace{108}_{topics})$). 
+For each model (N = 36), I perform 364 logistic regressions (246 sources[^1], 108 topics) twice, once for the predicted labels ($label_{pred}\sim source|topic$) and once for the gold standard labels ($label_{GS}\sim source|topic$) which results in 25,488 regressions ($= \underbrace{36}_{fine\ tuned\ models}\times \underbrace{2}_{predicted | gold standard}\times(\underbrace{246}_{sources} + \underbrace{108}_{topics})$). 
 
 Each column for the regression is binarised as integers (0 or 1).
 
@@ -98,15 +98,15 @@ For each regression I saved the following:
 - Covariate Names
 - Coef
 - Std err
-- z
+- ~~z~~
 - pvalues
 - Conf Int
 - Log-Likelihood
 - LL-Null
-- LLR p-value
-- AIC
-- BIC
-- N obs
+- LLR p-value - don't use it as a filter/threshold !!!
+- ~~AIC~~
+- ~~BIC~~
+- ~~N obs~~
 - N iterations
 
 as well as metadata from the model: 
