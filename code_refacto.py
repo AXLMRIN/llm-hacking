@@ -143,4 +143,6 @@ for dataset_info in config_json["datasets"]:
 - CHECK FOR MISTAKES
 - check if works on GPU
 - RESET environments and code versions to run all required models; update code if need be 
+- How to for large texts small window size
+- implement pooling strategies
 """
