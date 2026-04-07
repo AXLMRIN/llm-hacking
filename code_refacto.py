@@ -20,8 +20,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 prepare_environment()
 
 TEST_MODE = True
-BATCH_SIZE = 4
-TOTAL_BATCH_SIZE = 16
+BATCH_SIZE = 2
+TOTAL_BATCH_SIZE = 4
 
 with open("./config.json") as file:
     config_json = json.load(file)
