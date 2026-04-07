@@ -131,7 +131,7 @@ for dataset_info in config_json["datasets"]:
                         json.dump(saving_logs, file, ensure_ascii=True, indent=4)
             
             except Exception as e:print(f"Error in loop\n{e}")
-            finally: del model, tokenizer, ds_loop, dsd_loop, ds_pred, predictions, ; clean()
+            finally: del tokenizer, ds_loop, dsd_loop, ds_pred, predictions, ; clean() #TODO: re-delete model
             
             break
         break
