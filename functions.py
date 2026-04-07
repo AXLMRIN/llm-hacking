@@ -279,6 +279,21 @@ def create_hash(**kwargs)->str:
     h.update(s.encode())
     return h.hexdigest()
 
+def already_done(hash_:str):
+    """check if the hash exists in the saving logs."""
+    with open("./saving_logs.json", "r") as file :
+        saving_logs = json.load(file)
+    return hash_ in saving_logs
+
+def to_saving_logs(hash_: str, to_save: dict):
+    with open("./saving_logs.json", "r") as file :
+        saving_logs = json.load(file)
+
+    # Overwrite 
+    saving_logs[hash_] = to_save
+    
+    with open("./saving_logs.json", "w") as file:
+        json.dump(saving_logs, file, ensure_ascii=True, indent=4)
 
 def prepare_environment():
     if not Path("./models").is_dir():

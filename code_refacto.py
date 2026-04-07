@@ -49,6 +49,19 @@ for dataset_info in config_json["datasets"]:
             
             loop_config = {n: v for n,v in zip(parameter_names,local_config)}
             logger(f"Starting Loop on task {task_name} {'(TEST_MODE)' if TEST_MODE else ''} and config {loop_config}")
+
+            loop_ID = {
+                **loop_config, 
+                "task_name": task_name,
+                "dataset_train": dataset_info["filepath-train"],
+                "dataset_predict": dataset_info["filepath-predict"],
+            }
+            hash_ = create_hash(**loop_ID)
+            if already_done(hash_):
+                logger("Loop was already completed")
+                logger("END LOOP" + "#" * 92)
+                continue
+
             try: 
                 # Prepare tokenizer: model_name, context_window_rel_to_max
                 tokenizer = load_tokenizer(**loop_config)
@@ -123,40 +136,31 @@ for dataset_info in config_json["datasets"]:
                 predictions : pd.DataFrame = predict(model, ds_pred, batch_size=BATCH_SIZE, id2label=id2label)
                 logger(f"Inference done in {time() - tstart:.0f} s")
 
-                if not TEST_MODE or True: # TODO Remove "or True"
-                    to_save = {
-                        **loop_config, 
-                        "task_name": task_name,
-                        "score_on_test": score_on_test,
-                        "dataset_train": dataset_info["filepath-train"],
-                        "dataset_predict": dataset_info["filepath-predict"],
-                    }
-                    hash_ = create_hash(**to_save)
+                if not TEST_MODE:
                     predictions.to_csv(f"./predictions_save/{hash_}.csv")
-                    to_save["prediction-csv"] = f"./predictions_save/{hash_}.csv"
+                    to_save = {
+                        **loop_ID,
+                        "score_on_test": score_on_test,
+                        "prediction-csv": f"./predictions_save/{hash_}.csv"
+                    }                    
 
-                    with open("./saving_logs.json", "r") as file :
-                        saving_logs = json.load(file)
-                    saving_logs[hash_] = to_save
-                    with open("./saving_logs.json", "w") as file:
-                        json.dump(saving_logs, file, ensure_ascii=True, indent=4)
+                    to_saving_logs(hash_, to_save)
                     logger(f"Information saved with hash {hash_}")
-                    logger("END LOOP" + "#" * 92)
             
             except Exception as e:print(f"Error in loop\n{e}")
-            finally: del tokenizer, ds_loop, dsd_loop, ds_pred, predictions, ; clean() #TODO: re-delete model
-            
+            finally: 
+                del tokenizer, ds_loop, dsd_loop, ds_pred, predictions #TODO: re-delete model
+                clean() 
+                logger("END LOOP" + "#" * 92)
+
             break
         break
 
 #TODO
 """
 - remove the breaks
-- check that the configuration was not already computed before training, prevent from computing twice
 - Add seed to training ???
 - CHECK FOR MISTAKES
-- check if works on GPU
-- RESET environments and code versions to run all required models; update code if need be 
 - How to for large texts small window size
 - implement pooling strategies
 """
