@@ -180,7 +180,7 @@ def load_training_arguments(
         load_best_model_at_end = True,
         save_total_limit =  2,
         disable_tqdm = kwargs.get("disable_tqdm", False), 
-        dataloader_pin_memory = False if device == "cuda" else True,
+        dataloader_pin_memory = False if str(device) == "cuda" else True,
     )
 
 def compute_metrics_multiclass(model_output: EvalPrediction):
