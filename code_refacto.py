@@ -21,7 +21,7 @@ prepare_environment()
 
 TEST_MODE = True
 BATCH_SIZE = 1
-TOTAL_BATCH_SIZE = 2
+TOTAL_BATCH_SIZE = 1
 
 with open("./config.json") as file:
     config_json = json.load(file)
@@ -49,6 +49,7 @@ for dataset_info in config_json["datasets"]:
                 max_n_tokens = get_max_tokens(dichotomized_df["TEXT"], tokenizer)
                 # ⚠️ How do we deal with entries longer than the model's context window
                 max_length_capped = cap_max_length(max_n_tokens=max_n_tokens, **loop_config)
+                print("max_length : ", max_length_capped)
                 tokenization_parameters = {
                     'padding' : 'max_length',
                     'truncation' : True,
