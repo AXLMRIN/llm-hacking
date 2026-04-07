@@ -221,6 +221,7 @@ def train_model(
 ) -> None :
     """
     """
+    print(f"Train_model call")
     try: 
         device = get_device()
         for split in dsd:
@@ -237,7 +238,6 @@ def train_model(
             compute_metrics = compute_metrics_multiclass,
         )
         print(f"Begin training on {device}")
-
         trainer.train()
         return trainer.state.best_model_checkpoint
     except Exception as e:
