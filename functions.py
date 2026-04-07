@@ -221,8 +221,6 @@ def train_model(
 ) -> None :
     """
     """
-    print(f"Train_model call")
-    print(training_args.dataloader_pin_memory)
     try: 
         device = get_device()
         for split in dsd:
