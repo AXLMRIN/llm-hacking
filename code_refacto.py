@@ -49,7 +49,9 @@ for dataset_info in config_json["datasets"]:
                 max_n_tokens = get_max_tokens(dichotomized_df["TEXT"], tokenizer)
                 # ⚠️ How do we deal with entries longer than the model's context window
                 max_length_capped = cap_max_length(max_n_tokens=max_n_tokens, **loop_config)
-                print("max_length : ", max_length_capped)
+                # ⚠️ CAP FOR TESTING
+                max_length_capped = 200
+
                 tokenization_parameters = {
                     'padding' : 'max_length',
                     'truncation' : True,
