@@ -150,7 +150,13 @@ def tokenize_dataset_dict(row: dict, label2id: dict[str:int], tokenizer,  tokeni
         "labels": label2id[row["LABEL"]]
     }
 
-def load_training_arguments(output_dir :str, batch_size_device: int, total_batch_size : int = 16, **kwargs) -> TrainingArguments:
+def load_training_arguments(
+        output_dir :str, 
+        batch_size_device: int, 
+        total_batch_size : int = 16, 
+        **kwargs
+    ) -> TrainingArguments:
+    device = get_device()
     return TrainingArguments(
         bf16=True, # Faster training
         # Hyperparameters
@@ -173,7 +179,8 @@ def load_training_arguments(output_dir :str, batch_size_device: int, total_batch
         save_strategy = "epoch",
         load_best_model_at_end = True,
         save_total_limit =  2,
-        disable_tqdm = kwargs.get("disable_tqdm", False)
+        disable_tqdm = kwargs.get("disable_tqdm", False), 
+        dataloader_pin_memory = False if device == "cuda" else True,
     )
 
 def compute_metrics_multiclass(model_output: EvalPrediction):
