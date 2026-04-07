@@ -23,6 +23,7 @@
     },
     "model-hyperparameters":{
         "model_name": [
+            "FacebookAI/xlm-roberta-base",
             "jhu-clsp/mmBERT-base",
             "google-bert/bert-base-multilingual-cased",
             "google-bert/bert-base-uncased"
