@@ -283,6 +283,8 @@ def create_hash(**kwargs)->str:
 def prepare_environment():
     if not Path("./models").is_dir():
         os.mkdir("./models")
+    if not Path("./custom_logs").is_dir():
+        os.mkdir("./custom_logs")
     if not Path("./predictions_save").is_dir():
         os.mkdir("./predictions_save")
     if not Path("./saving_logs.json").exists():

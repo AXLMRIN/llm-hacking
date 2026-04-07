@@ -7,6 +7,7 @@ Out:
     data 
 """
 import os 
+from time import time
 import json
 from itertools import product
 import pandas as pd 
@@ -14,10 +15,12 @@ from datasets import Dataset, DatasetDict
 from transformers import AutoModelForSequenceClassification
 from sklearn.metrics import f1_score
 from functions import *
+from toolbox.CustomLogger import CustomLogger
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 prepare_environment()
+logger = CustomLogger("./custom_logs")
 
 TEST_MODE = True
 BATCH_SIZE = 4
@@ -41,11 +44,15 @@ for dataset_info in config_json["datasets"]:
         dichotomized_df, label2id, id2label = dichotomize(df, label)
         dichotomized_df_prediction, _, _ = dichotomize(df_prediction, label)
         for local_config in product(*parameters_values):
-            loop_config = {n: v for n,v in zip(parameter_names,local_config)}
+            logger("START LOOP" + "#" * 91, skip_line="before")
             model, tokenizer, ds_loop, dsd_loop, ds_pred, predictions = (None, )*6
+            
+            loop_config = {n: v for n,v in zip(parameter_names,local_config)}
+            logger(f"Starting Loop on task {task_name} {'(TEST_MODE)' if TEST_MODE else ''} and config {loop_config}")
             try: 
                 # Prepare tokenizer: model_name, context_window_rel_to_max
                 tokenizer = load_tokenizer(**loop_config)
+
                 max_n_tokens = get_max_tokens(dichotomized_df["TEXT"], tokenizer)
                 # ⚠️ How do we deal with entries longer than the model's context window
                 max_length_capped = cap_max_length(max_n_tokens=max_n_tokens, **loop_config)
@@ -81,13 +88,15 @@ for dataset_info in config_json["datasets"]:
                     total_batch_size=TOTAL_BATCH_SIZE, 
                     **loop_config
                 )
-
+                logger("Everything loaded — Start training")
+                tstart = time()
                 best_model_checkpoint = train_model(
                     model, 
                     training_args,
                     dsd_loop,
                     TEST_MODE
                 )
+                logger(f"Training done in {time() - tstart():.0f}s")
 
                 model = None
                 
@@ -95,6 +104,7 @@ for dataset_info in config_json["datasets"]:
                 model = AutoModelForSequenceClassification.from_pretrained(best_model_checkpoint)
                 predictions : pd.DataFrame = predict(model, dsd_loop["test"], batch_size=BATCH_SIZE, id2label=id2label)
                 score_on_test = f1_score(y_true = predictions["GS-LABEL"], y_pred = predictions["PRED-LABEL"], average="macro",zero_division=np.nan)
+                logger(f"Evaluate best model. Score: {score_on_test}")
 
                 # Predict on full data
                 ds_pred = Dataset.from_pandas(df_prediction)
@@ -108,9 +118,12 @@ for dataset_info in config_json["datasets"]:
                     tokenization_parameters
                 ))
 
+                logger("Start Inference")
+                tsart = time()
                 predictions : pd.DataFrame = predict(model, ds_pred, batch_size=BATCH_SIZE, id2label=id2label)
+                logger(f"Inference done in {time() - tstart:.0f} s")
 
-                if not TEST_MODE or True:
+                if not TEST_MODE or True: # TODO Remove "or True"
                     to_save = {
                         **loop_config, 
                         "task_name": task_name,
@@ -124,12 +137,11 @@ for dataset_info in config_json["datasets"]:
 
                     with open("./saving_logs.json", "r") as file :
                         saving_logs = json.load(file)
-                    saving_logs = {
-                        **saving_logs,
-                        hash_ :to_save
-                    }
+                    saving_logs[hash_] = to_save
                     with open("./saving_logs.json", "w") as file:
                         json.dump(saving_logs, file, ensure_ascii=True, indent=4)
+                    logger(f"Information saved with hash {hash_}")
+                    logger("END LOOP" + "#" * 92)
             
             except Exception as e:print(f"Error in loop\n{e}")
             finally: del tokenizer, ds_loop, dsd_loop, ds_pred, predictions, ; clean() #TODO: re-delete model

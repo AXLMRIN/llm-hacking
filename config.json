@@ -23,11 +23,11 @@
     },
     "model-hyperparameters":{
         "model_name": [
+            "google-bert/bert-base-uncased",
             "intfloat/multilingual-e5-large",
             "FacebookAI/xlm-roberta-base",
             "jhu-clsp/mmBERT-base",
-            "google-bert/bert-base-multilingual-cased",
-            "google-bert/bert-base-uncased"
+            "google-bert/bert-base-multilingual-cased"
         ],
         "context_window_rel_to_max":[
             100,
