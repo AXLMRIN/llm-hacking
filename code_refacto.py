@@ -88,7 +88,8 @@ for dataset_info in config_json["datasets"]:
                     dsd_loop,
                     TEST_MODE
                 )
-                del model
+                
+                del model; model = None
                 
                 # Reload model from checkpoint
                 model = AutoModelForSequenceClassification.from_pretrained(best_model_checkpoint)
