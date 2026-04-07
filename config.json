@@ -23,6 +23,7 @@
     },
     "model-hyperparameters":{
         "model_name": [
+            "jhu-clsp/mmBERT-base",
             "google-bert/bert-base-multilingual-cased",
             "google-bert/bert-base-uncased"
         ],
