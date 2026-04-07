@@ -114,6 +114,7 @@ for dataset_info in config_json["datasets"]:
                     to_save = {
                         **loop_config, 
                         "task_name": task_name,
+                        "score_on_test": score_on_test,
                         "dataset_train": dataset_info["filepath-train"],
                         "dataset_predict": dataset_info["filepath-predict"],
                     }
