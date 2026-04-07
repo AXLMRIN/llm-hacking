@@ -23,8 +23,8 @@
     },
     "model-hyperparameters":{
         "model_name": [
-            "google-bert/bert-base-uncased",
-            "google-bert/bert-base-multilingual-cased"
+            "google-bert/bert-base-multilingual-cased",
+            "google-bert/bert-base-uncased"
         ],
         "context_window_rel_to_max":[
             100,
