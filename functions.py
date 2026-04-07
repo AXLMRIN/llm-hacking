@@ -101,10 +101,10 @@ def pick_seed(**kwargs)->int:
     else:
         return 42
 
-def cap_max_length(max_n_tokens : int, context_window_rel_to_max : int, model_name : str, **kwargs):
+def cap_max_length(max_n_tokens : int, context_window_rel_to_max : int, model_name : str, **kwargs) -> int:
     requested = context_window_rel_to_max * max_n_tokens / 100
     model_max = AutoConfig.from_pretrained(model_name).max_position_embeddings
-    return min(requested, model_max)
+    return int(min(requested, model_max))
 
 def sample_N_elements(df: pd.DataFrame, N_train: int, **kwargs)->pd.DataFrame:
     """
